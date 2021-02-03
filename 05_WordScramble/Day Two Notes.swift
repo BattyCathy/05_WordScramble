@@ -263,7 +263,7 @@ import Foundation
 //We've done that several times now, so hopefully, it's becoming second nature!
 
 //At long last it's time to inish our game: replace the // extra validation to come comment in adeNewWord() with this:
-\
+
 /*
  guard isOriginal(word: answer) else {
     wordError(title: "Word used already", message: "Be more original")
