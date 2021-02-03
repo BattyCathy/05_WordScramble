@@ -72,7 +72,7 @@ struct ContentView: View {
             return
         }
         
-        score += answer.utf16.count
+        score += answer.utf16.count + 2
         usedWords.insert(answer, at: 0)
         newWord = ""
         
