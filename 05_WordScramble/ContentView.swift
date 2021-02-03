@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     
-    
+  
+    @State private var score = 0
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var showingError = false
@@ -19,6 +20,8 @@ struct ContentView: View {
     @State private var newWord = ""
     
     func startGame() {
+        score = 0
+        usedWords.removeAll()
         //1. Find the URL for start.txt in our app bundle
         if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             //Load start.txt in our app bundle
@@ -32,6 +35,7 @@ struct ContentView: View {
                 //If we are here everything has worked, so we can exit
                 return
             }
+            
         }
         
         //If we are here then there was a problem - trigger a crash and report the error
@@ -59,16 +63,25 @@ struct ContentView: View {
         }
         
         guard isReal(word: answer) else {
-            wordError(title: "Word not possible", message: "Be more original")
+            wordError(title: "Word not possible", message: "That isn't a real word")
             return
         }
         
+        guard isLongEnough(word: answer) else {
+            wordError(title: "Word too short!", message: "Three letters or more please!")
+            return
+        }
+        
+        score += answer.utf16.count
         usedWords.insert(answer, at: 0)
         newWord = ""
+        
     }
     
+    
+    
     func isOriginal(word: String) -> Bool {
-        !usedWords.contains(word)
+        !usedWords.contains(word) && word != rootWord
     }
     
     func isPossible(word: String) -> Bool {
@@ -92,6 +105,14 @@ struct ContentView: View {
         return misspelledRange.location == NSNotFound
     }
     
+    func isLongEnough(word: String) -> Bool {
+        if word.utf16.count < 3 {
+            return false
+        } else {
+            return true
+        }
+    }
+    
     func wordError(title: String, message: String) {
         errorTitle = title
         errorMessage = message
@@ -109,8 +130,12 @@ struct ContentView: View {
                 List(usedWords, id: \.self) {
                     Text($0)
                 }
+                Text("Score: \(score)")
             }
             .navigationBarTitle(rootWord)
+            .navigationBarItems(trailing: Button(action: startGame) {
+                Text("Start Over")
+            } )
             .onAppear(perform: startGame)
             .alert(isPresented: $showingError) {
                 Alert(title: Text(errorTitle), message: Text(errorMessage), dismissButton: .default(Text("OK")))
