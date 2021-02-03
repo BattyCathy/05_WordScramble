@@ -182,3 +182,106 @@ import Foundation
 //If you run the game now you should see a random eight letter word at the top of the navigation eveiw. It doesn't really mean anything yet, because players can still enter whatever words they want. Let's fix that next...
 
 //MARK: 3. Validating Words with UITextChecker
+
+//Now that our game is all set up, the last part of this project is to make sure the user can't enter invalid words. We're going to implemnt this as four small methods, each of which perform exactly one check: is the word original (it hasn't been used already), is the word possible (they aren't trying to spell "car" from "silkworm"), and is the word real it's an actual English word).
+
+//If you were paying attention you'll have noticed that was only three methods - that's because the fourth method will be there to make showing the error messages easier.
+
+//Anyway, let's start with the first method: this will accept a string as its only parameter, and return true pr false depending on whether the word has been used before or not. We alread have a usedWords arrays, so we can pass the word into its contains() methos and send the result back like this:
+
+/*
+ func isOriginal(word: String) -> Bool {
+    !usedWords.contains(word)
+ }
+ */
+
+//That's one method down!
+
+//the next one is slightly trickier: how can we check whether a random word can be made out of the letters from another random word?
+
+//There are a couple of ways we could tackle this, but the easiest one is thisL if we create a variable copy of the root word, we can then loop over each letter of the user's input word to see if that letter exists in our copy. if it does, we remove it from the copy (so it can't be used twice), then continue. If we make it to the end of the user's word successfully then the word is good, otherwise there's amistake and we return false.
+
+//So, here's our second method:
+
+/*
+ func isPossible(word: String) _> Bool {
+    var tempWord = rootWord
+ 
+    for letter in word {
+        if let pos = tempWord.firstIndex(of: letter) {
+    } else {
+        return false
+    }
+ 
+    return true
+ }
+ */
+
+//The final method is harder, because we neeed to use UITextChecker from UIKit. In order to bridge Swift strings to Objective-C strings safewly, we need to create an instance of NSRange using the UTF-1 count of our Swift string. This isn't nice, I know, but I'm afrain it's unavoidable until Apple cleans up those APIs.
+
+//So, our last method will make an instance of UITextCHecker, which is responsible for scanning strings for misspelled words. We'll then create an NSRange to scan the entire length of our string, then call rangeOfMisspelledWord() on our text checker so that it looks for wrong words. When that finished we'll get back another NSRange telling us where the misspelled word was found, but if the word was OK the location for that range will be the special value NSNotFound.
+
+//So, here's our final method:
+
+/*
+ func isReal(word: String) -> Bool {
+    let checker =UITextChecker()
+    let range = NSRange(location: 0, length: word.utf16.count)
+    let misspelledRange = checker.rangeOfMisspelledWord(in: word, rnage: range, startingAt: 0, wrap: false, language: "en")
+ 
+    return misspelledRange.location == NSNotFound
+ }
+ */
+
+//Before we can use those three, I want to add some code to make showing error alerts easier. Firt, we need some properties to control our alerts:
+
+/*
+ @State private var errorTitle = ""
+ @State private var errorMessage = ""
+ @State private var showingError = false
+ 
+ */
+
+
+//Now we can add a method that sets the title and message based on the parameters it receicves, then flig=ps the showingError Bolean to true:
+
+/*
+ func wordError(title: String, message: String) {
+    errorTitle = title
+    errorMessage = message
+    showingError = true
+ }
+ */
+
+//We can then pass those directly on to SwitUI by addin an alert() modifier below .onAppear():
+
+/*
+ .alert(isPresented: $showingError) {
+    Alert(title: Text(errorTitle), message: Text(errorMessage), dismissButton: .default(Text("OK")))
+ */
+
+//We've done that several times now, so hopefully, it's becoming second nature!
+
+//At long last it's time to inish our game: replace the // extra validation to come comment in adeNewWord() with this:
+\
+/*
+ guard isOriginal(word: answer) else {
+    wordError(title: "Word used already", message: "Be more original")
+    return
+ }
+ 
+ guard isPossible(word: answer) else {
+    wordError(title: "Word not recognized", message: "You can't just make them up, you know!")
+    return
+ }
+ guard isReal(word: answer) else {
+    wordError(title: "Word not possible", message: "That isn't a real word.")
+    return
+ }
+
+ */
+
+
+//If you run the app now you should find that it will refuse to let you use words if they fail our tests - trying a duplicate word won't work, word that can't be spelled from the root word don't work, and gibberish words won't work either.
+
+//That's another app done - good job!
