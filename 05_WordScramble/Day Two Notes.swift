@@ -132,4 +132,53 @@ import Foundation
 
 //MARK: 2. Running Code When Our App Launches
 
+//When XXcode build an iOS project, it puts your compiled program, you Info.plist file, your asset catalog, and any other assets into a single directory called a bundle, then gives that bundle the name YourAppName.app. This ".app" extension is automatically recognized by iOS and Apple's other platforms, which is why if you double-clock something like Notes.app on macOS it knows to launch the program insde the bundle.
+
+//In our game, we already defined a property called rootWord, which will contain the word we want the player to spell from. What we need to do now is write a new method called startGame() that will:
+
+//1. Find start.txt in our bundle
+
+//2. Load it into a string
+
+//3. Split that string into an array of strings, with each element being one word
+
+//4. Pik one random word from there to be assigned to rrotWord, or use a sensible default if the array is empty.
+
+//Each of those four tasks corresponds to one line of code, but there's a twist: what if we can't locate start.txt in our app bundle, or if we can locate it but we can't load it? In that case we have a serious problem, because our app ifs really brokem - either we forgot to include the file somehow (in which case our game won't work) or we includedf it but for somme reason iOS refused to let us read it (in which case our game won't work, and our app is broken).
+
+//regardless of what caused it, this is a situation that never ought to happen, and Swift gives us a function called fatalError() that lets us detect problems really clearly. When we call fatalError() it will - unconditionally and always - cause our app to crash. It will just dies. Not "might die" or "maybe die": it will always just terminate straight away.
+
+//I realize this sounds bad, but what it lets us do it impotant: for problems like this one, such as if we forget to include a file in our prject, there is no point in trying to make our app struggle on in a broken state. It's much better to terminate immediately and give us a clear explanation of what went wrong so we can corrent the problem, and that' exactly what fatalErro() does.
+
+//Anyway, let's take a look a the code - I've added comments matching the numbers above:
+
+/*
+ func startGame() {
+    //1 . Find the URl for start.txt in our app bundle
+    if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
+        //2. Load start.txt into a string
+        if let startWords = try? String(contentsOf: startWordsURL) {
+            //3. Split the string up into an array of strings, splitting on line breaks
+            let allWords = sttartWords.components(separateBy: "\n")
+ 
+            //4. Pick one random word, or use "silkworm" as a sensible default
+            rootWord = allWords.randomElement() ?? "silkworm"
+ 
+            //If we are here everything has worked, so we can exit
+            return
+ 
+        }
+    }
+ 
+    //If we are *here* then there was a problem - trigger a crash and report the error
+    fatalError("Could not load start.txt from bundle.")
+ }
+ */
+
+//Now that we have a method to load everything for the game, we need to actually call that thing whe our view is shwon. SwiftuI give us a dedicated view midifier for running when a view is shown, so we can use that to call startGame() and get things moving - add this modifier after navigationBarTitle():
+
+//.onAppear(perform: startGame)
+
+//If you run the game now you should see a random eight letter word at the top of the navigation eveiw. It doesn't really mean anything yet, because players can still enter whatever words they want. Let's fix that next...
+
 //MARK: 3. Validating Words with UITextChecker
