@@ -143,6 +143,113 @@ import Foundation
  */
 // 3. Loading Resources From Your App Bundle
 
+//When we use Image views, SwiftUI knows to look in your app's asset catalog to find the artwork, and it even automatically adjusts the artwork so it loads the correct picture for the current screen resolution - that's the @2x and @3x stuff we looked at earlier.
+
+//For other date, such as text files, we need to do more work. This also applies if you hace specific data formats such as XML or JSON - it takes the same works regardless of what file types you're loading.
+
+//When Xcode builds your app, it creates something called a "bundle". This happens on all of Apple's platforms, including macOS, and it allows the system to store all the files for a single app in one place = the binary code (the actual compiled Swift stuff we wrote), all the artwork, any extra files we need, our Info.plist file, and more, all in one place.
+
+//In the future, as your skills grow, you'll learn how you can actually include multiple bundles in a single app, allowing you to write things like Siri extensions, iMessage apps, watchOS apps, and more, all inside a single iOS app bundle, called the main bundle.
+
+//All this matters because it's common to want to look in a bundle for a file you placed there. This uses a new data type called URL, whihch stores pretty much exactly what you think: a URL such as https://wwww.hackingwithswift.com. However, URLs are a bit more powerful than just storing web addresses - they can also store the locations of files, which is why they are usefule here.
+
+//Let's start writing some code. If we cant to read the URL for a file in our main app bundle, we use Bundle.main.url(), If the file exists it will be sent back to us, otherwise we'll get back nil, so this is an optional URL. That means we need to unwrap it like this:
+
+/*
+ if let fileURL = Bundle.main.url(forResource: "some-file", withExtension: "txt") {
+    // we found the file in our bundle!
+ }
+ */
+
+//What's inside the URL doesn't really matter, because iOS uses paths that are impossible to guess - our app lives in its own sandbox, and we shouldn't try to read outside of it.
+
+//Once we have a URL, we can load it into a string with a special initializer: String(contentsOf;). We give this a file URL, and it will send back a string containing the contents of that file if it can be loaded. If it can't be loaded it throw an error, so you need to call this using try or try? like this:
+
+
+/*
+ if let fileContents = try? String(contentsOf: fileURL) {
+    // we loaded the file into a string!
+ }
+ */
+
+//Once you have the contents of the file, you can do with it whatever you want - it's just a regular string.
+
+
 // 4. Working with Strings
 
+//iOS gives us some really powerful APIs for working with strings, including he ability to split them into an array, remove whitespace, and even check spellings.
 
+//In this app, we're going to be loading a file from our app bundle that contains over 10,000 eight letter words, each of which can be used to start the game. These words are stored one per line, so what we really wantis to split that string up into an array of strings in order that we can pick one randomly.
+
+//Swift gives us a method called components(separatedBy:) that can convert a single string into an array of strings by breaking it up wherever string is found. For example, this will create the array ["a", "b", "c"]:
+
+/*
+ let input = "a b c"
+ let letters = input.components(separatedBy: " ")
+ */
+
+//We have a string where words are separated by line breaks, so to convert that into a string array we need to split on that.
+
+//In programming - almost universally, I think - we use a special character sequence to represent line breaks: \n. So, we would write code like this:
+
+/*
+ let input = """
+            a
+            b
+            c
+            """
+ let letters = input.components(separatedBy: "\n")
+ 
+ */
+
+//Regardless of what string we split on, the result will be an array of strings. From there we can read individual values by indexing into the array, such as letters[0] or letters[2], but Swift gives us a useful option: the randomElement() method returns one random item from the array.
+
+//For example, this will read a random letter from our array:
+
+//let letter = letters.randomElement()
+
+//Now, although we can see that the letters array will contain three intems, Swift doesn't know that - [erhaps we tried to split up an empty string, for example. As a resultt, the randomElement() method returns an optional string, which we must either unwrap or use with nil coalescing.
+
+//Another useful string method is trimmingCharacters(in:), which asks Swift to remove certain kinds of character from the start and end of a string. this uses a new type called CharacterSet, but most of the time we want one particular behavior: removing whitespace and new lines - this refers to spaces, taps, and line breaks all at once.
+
+//This behavior is so common it's built right into the CharacterSet struct, so we can ask Swift to trim all witespace at the start and end od a string like this:
+
+//let trimmed = leetter?.trimmingCharacters(in: .whitespacesAndNewLines)
+
+//There's one last piece of string funtionality that i'd like to cover before we dive into the main project, and that is the ability to check for misspelled words.
+
+//This functionality is provided through the class UITextChecker. you might not realize this, but the UI part of that name carries two additional meanings with it:
+
+// 1. This class comes from UIKit. That doesn't mean we're loadin all the old user interface framework, though; we actuallly get it automatically through SwiftUI
+
+// 2. It's written using Apple's older language, Objective-C. We don't need to write Objective-C to use it, but there is a slightly unwiedly API for Swift users.
+
+//Checking a string for missspelled words takes four steps in total. First, we create a word to check and an instance of UITectChecker that we can use to check that string:
+
+/*
+ let word = "swift"
+ let checker = UITextCHecker()
+ 
+ */
+
+//Second, we need to tell the checker how much of our string we want to check. If you imagine a spellchecker in a word processing app, you might want to check only the tet the user selected rather than the entrie document.
+
+//However, there's a catch: Swift uses a very clever, very advanced way of working with strings, which allows it to use complex characters such as emoji in exactly the same way that it uses the English alphabet. However, Objective-C does not use this method of storing letters, which means we need to ask Swift to create an Object-C string range using the entire length or all our characters, like this:
+
+//let range = NSRange(location: 0, length: word.utf16.count)
+
+//UTF-16 is what's called a character encoding - a way of storing letters in a string. We use it here so that Objective-C can understand how Swift's strings are store; it's a nice bridging format for us to connect the two.
+
+//Third, we can ask our text checker tor eport where it found any misspellings in our word, passing in the range to check, a position to start within the range (so we can do things like "Find Next"), wheter it should wrap around once it reaches the end, and what language to use for the dictionary:
+
+//let misspelledRange = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: "en")
+
+//that sends back another Objective-C string range, telling us where the misspelling was found. Even then, there's still one complexity here: Objective-C didn't have any concept of optionals, so instead relied on special values to represent data.
+
+//In this instace, if the Objective-C range comes back as empty - i.e., if there was no spelling mistake because the string was spelled correctly - then we get back the special balue NSNotFound.
+
+//So, we could check our spelling result to see whether there was a mistake or not like this:
+
+//Let allGood = misspelledRange.location == NSNotFound
+
+//Ok, that's enough Api exploration.for now - let's get into our actual project...
